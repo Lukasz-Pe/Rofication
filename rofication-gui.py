@@ -5,9 +5,21 @@ import socket
 import struct
 import subprocess
 import jsonpickle
+import argparse
 from gi.repository import GLib
 from enum import Enum
 from msg import Msg,Urgency
+
+parser = argparse.ArgumentParser(description="Rofication gui", formatter_class=argparse.RawDescriptionHelpFormatter)
+
+parser.add_argument(dest="theme", help="Color/theme", nargs='?')
+
+if len(sys.argv)==1:
+ parser.print_help(sys.stderr)
+ sys.exit(1)
+args = vars(parser.parse_args())
+
+
 
 def linesplit(socket):
     buffer = socket.recv(16)
@@ -27,19 +39,23 @@ def linesplit(socket):
     if buffer:
         yield buffer
 
-msg = """<span font-size='small'><i>Alt+s</i>:    Dismiss notification.    <i>Alt+Enter</i>:      Mark notification seen.\n"""
-msg += """<i>Alt+r</i>:    Reload                   <i>Alt+a</i>:          Delete application notification</span>""";
-rofi_command = [ 'rofi' , '-dmenu', '-p', 'Notifications:', '-markup', '-mesg', msg]
+msg = """<span font-size='small'><i>+Delete</i>:    Dismiss notification.    <i>+Insert</i>:      Mark notification seen.\n"""
+msg += """<i>+r</i>:         Reload                   <i>+End</i>:         Delete application notification</span>""";
+
+if args["theme"] is not None:
+ rofi_command = [ 'rofi' , '-dmenu', '-p', 'Notifications:', '-markup', '-mesg', msg, '-theme', args["theme"], '-m', '2']
+else:
+ rofi_command = [ 'rofi' , '-dmenu', '-p', 'Notifications:', '-markup', '-mesg', msg, '-m', '2']
 
 def strip_tags(value):
   "Return the given HTML with all tags stripped."
   return re.sub(r'<[^>]*?>', '', value)
 
 def call_rofi(entries, additional_args=[]):
-    additional_args.extend([ '-kb-custom-1', 'Alt+s',
-                             '-kb-custom-2', 'Alt+Return',
-                             '-kb-custom-3', 'Alt+r',
-                             '-kb-custom-4', 'Alt+a',
+    additional_args.extend([ '-kb-custom-1', 'Super+Delete',
+                             '-kb-custom-2', 'Super+Insert',
+                             '-kb-custom-3', 'Super+r',
+                             '-kb-custom-4', 'Super+End',
                              '-markup-rows',
                              '-sep', '\3',
                              '-format', 'i',
